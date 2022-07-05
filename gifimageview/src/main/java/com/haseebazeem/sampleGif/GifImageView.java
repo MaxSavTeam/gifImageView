@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Movie;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.util.AttributeSet;
@@ -14,7 +13,6 @@ import android.view.View;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.lang.reflect.Type;
 
 public class GifImageView extends View {
 
@@ -22,8 +20,9 @@ public class GifImageView extends View {
     private Movie mMovie;
     private int mWidth, mHeight;
     private long mStart;
-    private Context mContext;
-    private int src;
+    private final Context mContext;
+
+    private boolean isStopped = false;
 
     public GifImageView(Context context) {
         super(context);
@@ -38,9 +37,9 @@ public class GifImageView extends View {
         super(context, attrs, defStyleAttr);
         this.mContext = context;
 
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.MyGif);
-        src = typedArray.getResourceId(R.styleable.MyGif_src, 0);
-        setGifImageResource(src);
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.GifImageView );
+        int src = typedArray.getResourceId( R.styleable.GifImageView_src, 0 );
+        setGifImageResource( src );
         typedArray.recycle();
     }
 
@@ -58,10 +57,26 @@ public class GifImageView extends View {
         setMeasuredDimension(mWidth, mHeight);
     }
 
+    public void start(){
+        isStopped = false;
+        mStart = 0;
+        invalidate();
+    }
+
+    public void stop(){
+        isStopped = true;
+        invalidate();
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
+        if(isStopped) {
+            if(mMovie != null)
+                mMovie.draw( canvas, 0, 0 );
+            return;
+        }
 
-        long now = SystemClock.uptimeMillis();
+        long now = System.currentTimeMillis();
 
         if (mStart == 0) {
             mStart = now;
